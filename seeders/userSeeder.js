@@ -20,8 +20,8 @@ const seedUsers = async () => {
     await User.deleteMany({});
 
     // Don't hash passwords here - the User model's pre-save hook will handle it
-    const adminPassword = 'admin123';
-    const userPassword = 'user123';
+    const adminPassword = 'admin123!@$%#';
+    const userPassword = 'user123!@$%#';
 
     // Create admin user
     const adminUser = new User({
