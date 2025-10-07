@@ -13,9 +13,23 @@ const app = express();
 
 // Middleware
 app.use(cors({
-  origin: process.env.NODE_ENV === 'production'
-    ? process.env.FRONTEND_URL
-    : ['http://localhost:3000', 'http://localhost:3001', 'http://localhost:3002', 'http://localhost:3003', 'http://localhost:3004'],
+  origin: (origin, callback) => {
+    console.log('Incoming Origin:', origin);
+    if (process.env.NODE_ENV === 'production') {
+      if (origin === process.env.FRONTEND_URL) {
+        callback(null, true);
+      } else {
+        callback(new Error('CORS not allowed'), false);
+      }
+    } else {
+      const allowedOrigins = ['http://localhost:3000', 'http://localhost:3001', 'http://localhost:3002', 'http://localhost:3003', 'http://localhost:3004'];
+      if (allowedOrigins.includes(origin)) {
+        callback(null, true);
+      } else {
+        callback(new Error('CORS not allowed'), false);
+      }
+    }
+  },
   credentials: true
 }));
 
