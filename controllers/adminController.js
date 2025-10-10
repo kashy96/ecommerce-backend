@@ -206,9 +206,15 @@ exports.createProduct = async (req, res) => {
 
     // Handle nested weight fields for create
     const weightData = {};
+    console.log('Product data', productData);
+
     if (productData['weight.value'] !== undefined) {
       weightData.value = Number(productData['weight.value']);
       delete productData['weight.value'];
+    }
+    if (productData['weight.unit'] !== undefined) {
+      weightData.unit = productData['weight.unit'];
+      delete productData['weight.unit'];
     }
     if (Object.keys(weightData).length > 0) {
       productData.weight = weightData;
@@ -313,9 +319,15 @@ exports.updateProduct = async (req, res) => {
 
     // Handle nested weight fields
     const weightUpdates = {};
+    console.log('Product data', updateData);
+
     if (updateData['weight.value'] !== undefined) {
       weightUpdates.value = Number(updateData['weight.value']);
       delete updateData['weight.value'];
+    }
+    if (updateData['weight.unit'] !== undefined) {
+      weightUpdates.unit = updateData['weight.unit'];
+      delete updateData['weight.unit'];
     }
     if (Object.keys(weightUpdates).length > 0) {
       updateData.weight = weightUpdates;
