@@ -6,12 +6,18 @@ yarn-error.log*
 package-lock.json
 yarn.lock
 
-# Environment variables
+# Environment variables (exclude all .env files except example)
 .env
 .env.local
+.env.development
 .env.development.local
+.env.test
 .env.test.local
+.env.production
 .env.production.local
+
+# But keep example files
+!.env.example
 
 # Logs
 logs/
@@ -52,6 +58,13 @@ desktop.ini
 .settings/
 *.sublime-project
 *.sublime-workspace
+
+# Documentation - Keep these files
+!README.md
+!CHANGELOG.md
+!CONTRIBUTING.md
+!LICENSE
+!CLAUDE.md
 
 # Testing
 coverage/
