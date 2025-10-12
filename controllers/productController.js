@@ -254,3 +254,32 @@ exports.getProductReviews = async (req, res) => {
     });
   }
 };
+
+// Get similar products
+exports.getSimilarProducts = async (req, res) => {
+  try {
+    const productId = req.params.id;
+    const { limit = 8 } = req.query;
+
+    const result = await productService.getSimilarProducts(productId, { limit });
+
+    res.status(200).json({
+      success: true,
+      data: result.products
+    });
+  } catch (error) {
+    console.error('Get similar products error:', error);
+
+    if (error instanceof NotFoundError) {
+      return res.status(404).json({
+        success: false,
+        message: error.message
+      });
+    }
+
+    res.status(500).json({
+      success: false,
+      message: 'Server error getting similar products'
+    });
+  }
+};

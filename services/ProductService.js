@@ -341,6 +341,21 @@ class ProductService extends BaseService {
 
     return await this.repository.updateById(productId, { isFeatured: !product.isFeatured });
   }
+
+  async getSimilarProducts(productId, options = {}) {
+    // Verify product exists
+    const product = await this.repository.findById(productId);
+    if (!product) {
+      throw new NotFoundError('Product not found');
+    }
+
+    const { limit = 8 } = options;
+    const similarProducts = await this.repository.findSimilarProducts(productId, { limit: parseInt(limit) });
+
+    return {
+      products: similarProducts
+    };
+  }
 }
 
 module.exports = ProductService;

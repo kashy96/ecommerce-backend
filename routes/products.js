@@ -7,7 +7,8 @@ const {
   getFeaturedProducts,
   getProductBrands,
   addProductReview,
-  getProductReviews
+  getProductReviews,
+  getSimilarProducts
 } = require('../controllers/productController');
 const { protect, optionalAuth } = require('../middleware/auth');
 
@@ -21,6 +22,7 @@ router.get('/brands', getProductBrands);
 router.get('/category/:categoryId', getProductsByCategory);
 router.get('/:id', optionalAuth, getProduct);
 router.get('/:id/reviews', getProductReviews);
+router.get('/:id/similar', getSimilarProducts);
 
 // Protected routes
 router.post('/:id/reviews', protect, addProductReview);

@@ -56,8 +56,100 @@ class ProductRepository extends BaseRepository {
         category: categoryId,
         isActive: true
       },
-      { limit, sort: { averageRating: -1 } }
+      { limit, sort: { averageRating: -1 }, populate: 'category' }
     );
+  }
+
+  async findSimilarProducts(productId, options = {}) {
+    const { limit = 8 } = options;
+
+    // First, get the current product
+    const product = await this.model.findById(productId);
+    if (!product) return [];
+
+    // Build aggregation pipeline to find similar products
+    const pipeline = [
+      {
+        $match: {
+          _id: { $ne: product._id },
+          isActive: true
+        }
+      },
+      {
+        $addFields: {
+          similarityScore: {
+            $add: [
+              // Same category gets 50 points
+              { $cond: [{ $eq: ['$category', product.category] }, 50, 0] },
+              // Same brand gets 30 points
+              { $cond: [{ $eq: ['$brand', product.brand] }, 30, 0] },
+              // Matching tags get 5 points each (max 20 points)
+              {
+                $multiply: [
+                  {
+                    $size: {
+                      $ifNull: [
+                        { $setIntersection: [{ $ifNull: ['$tags', []] }, product.tags || []] },
+                        []
+                      ]
+                    }
+                  },
+                  5
+                ]
+              }
+            ]
+          }
+        }
+      },
+      {
+        $match: {
+          similarityScore: { $gt: 0 }
+        }
+      },
+      {
+        $sort: {
+          similarityScore: -1,
+          averageRating: -1
+        }
+      },
+      {
+        $limit: limit
+      },
+      {
+        $lookup: {
+          from: 'categories',
+          localField: 'category',
+          foreignField: '_id',
+          as: 'category'
+        }
+      },
+      {
+        $unwind: {
+          path: '$category',
+          preserveNullAndEmptyArrays: true
+        }
+      }
+    ];
+
+    const similarProducts = await this.model.aggregate(pipeline);
+
+    // Convert aggregation results to proper Mongoose documents to get virtual fields
+    const productIds = similarProducts.map(p => p._id);
+    if (productIds.length === 0) return [];
+
+    // Fetch the products using find to get all virtual fields including ratings
+    // Use the same approach as findAll in BaseRepository
+    const productsWithVirtuals = await this.findAll(
+      { _id: { $in: productIds } },
+      { populate: 'category' }
+    );
+
+    // Sort them according to the original similarity order
+    const orderedProducts = productIds.map(id =>
+      productsWithVirtuals.find(p => p._id.toString() === id.toString())
+    ).filter(Boolean);
+
+    return orderedProducts;
   }
 
   async filterProducts(filters = {}, options = {}) {

@@ -8,15 +8,41 @@ class EmailService {
   _createTransporter() {
     // Use SMTP configuration for Mailtrap in development
     if (process.env.EMAIL_SERVICE === 'smtp') {
-      return nodemailer.createTransport({
+      const port = parseInt(process.env.EMAIL_PORT || '587');
+      const isSecure = port === 465;
+
+      const config = {
         host: process.env.EMAIL_HOST,
-        port: process.env.EMAIL_PORT,
-        secure: false, // true for 465, false for other ports
+        port: port,
+        secure: isSecure, // true for 465, false for other ports (587, 2525)
         auth: {
           user: process.env.EMAIL_USER,
           pass: process.env.EMAIL_PASS
-        }
+        },
+        tls: {
+          rejectUnauthorized: false // Accept self-signed certificates
+        },
+        // Additional debugging and connection settings
+        logger: process.env.NODE_ENV === 'development',
+        debug: process.env.NODE_ENV === 'development',
+        connectionTimeout: 10000, // 10 seconds
+        greetingTimeout: 10000,
+        socketTimeout: 10000
+      };
+
+      // For non-secure ports (587), explicitly enable STARTTLS
+      if (!isSecure) {
+        config.requireTLS = true;
+      }
+
+      console.log('📧 Email Configuration:', {
+        host: config.host,
+        port: config.port,
+        secure: config.secure,
+        user: config.auth.user
       });
+
+      return nodemailer.createTransport(config);
     }
 
     // Default service-based configuration (Gmail, etc.)
